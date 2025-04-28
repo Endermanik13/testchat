@@ -1,0 +1,164 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форум</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #auth, #forum { margin-bottom: 20px; }
+        .message { border-bottom: 1px solid #ddd; padding: 10px; }
+        input, button { margin: 5px; padding: 8px; }
+        .error { color: red; }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <div id="auth">
+        <h2>Авторизация</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Пароль">
+        <button onclick="signUp()">Регистрация</button>
+        <button onclick="signIn()">Вход</button>
+        <button onclick="signOut()" id="signOutBtn" style="display: none;">Выход</button>
+        <p class="error" id="error"></p>
+    </div>
+    <div id="forum" style="display: none;">
+        <h2>Форум</h2>
+        <input type="text" id="message" placeholder="Ваше сообщение">
+        <button onclick="sendMessage()">Отправить</button>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM elements
+        const authDiv = document.getElementById('auth');
+        const forumDiv = document.getElementById('forum');
+        const errorP = document.getElementById('error');
+        const signOutBtn = document.getElementById('signOutBtn');
+
+        // Auth state listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                authDiv.style.display = 'none';
+                forumDiv.style.display = 'block';
+                signOutBtn.style.display = 'inline';
+                loadMessages();
+            } else {
+                authDiv.style.display = 'block';
+                forumDiv.style.display = 'none';
+                signOutBtn.style.display = 'none';
+            }
+        });
+
+        // Sign up
+        function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .catch(error => errorP.textContent = error.message);
+        }
+
+        // Sign in
+        function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => errorP.textContent = error.message);
+        }
+
+        // Sign out
+        function signOut() {
+            auth.signOut();
+        }
+
+        // Send message
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (message.trim()) {
+                db.collection('messages').add({
+                    text: message,
+                    user: auth.currentUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    document.getElementById('message').value = '';
+                }).catch(error => errorP.textContent = error.message);
+            }
+        }
+
+        // Load messages
+        function loadMessages() {
+            db.collection('messages')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot(snapshot => {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const div = document.createElement('div');
+                        div.className = 'message';
+                        div.textContent = `${data.user}: ${data.text}`;
+                        messagesDiv.appendChild(div);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
