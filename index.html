@@ -102,13 +102,13 @@
         .message-input {
             resize: none;
         }
-        /* Анимация для новых сообщений */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
+        /* Анимация для новых сообщений (снизу вверх) */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .new-message {
-            animation: slideIn 0.5s ease-in-out;
+            animation: slideUp 0.5s ease-in-out;
         }
         /* Стиль для иконки ошибки */
         .error-icon {
@@ -160,7 +160,7 @@
                     <button onclick="signInAnonymously()" class="w-full bg-[#4F545C] hover:bg-[#5D6269] text-white p-3 rounded transition-all duration-300 font-medium">Войти анонимно</button>
                 </div>
                 <div class="space-y-4 hidden" id="signOutForm">
-                    <button onclick="signOut()" class="w-full bg-red-500 hover:bg-red-600 text-white p-3 rounded transition-all duration-300 font-medium">Выйти</button>
+                    <button id="signOutButton" class="w-full bg-red-500 hover:bg-red-600 text-white p-3 rounded transition-all duration-300 font-medium">Выйти</button>
                 </div>
                 <p class="error text-red-400 text-center flex items-center justify-center" id="error"></p>
             </div>
@@ -206,6 +206,7 @@
             const authDiv = document.getElementById('auth');
             const authForm = document.getElementById('authForm');
             const signOutForm = document.getElementById('signOutForm');
+            const signOutButton = document.getElementById('signOutButton');
             const messagesDiv = document.getElementById('messages');
             const errorP = document.getElementById('error');
             const messageErrorP = document.getElementById('messageError');
@@ -224,6 +225,14 @@
 
             // Add event listener for auth toggle
             authToggle.addEventListener('click', toggleAuth);
+
+            // Sign out
+            function signOut() {
+                auth.signOut();
+            }
+
+            // Add event listener for sign out
+            signOutButton.addEventListener('click', signOut);
 
             // Array of colors for avatars
             const avatarColors = ['#5865F2', '#57F287', '#FEE75C', '#EB459E', '#ED4245'];
@@ -316,11 +325,6 @@
                     .catch(error => errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`);
             }
 
-            // Sign out
-            function signOut() {
-                auth.signOut();
-            }
-
             // Mention user
             function mentionUser(username) {
                 const currentValue = messageInput.value;
@@ -384,7 +388,7 @@
             function loadMessages() {
                 messagesDiv.innerHTML = '';
                 db.collection('messages')
-                    .orderBy('timestamp', 'desc')
+                    .orderBy('timestamp', 'asc') // Сортировка по возрастанию (старые сверху, новые снизу)
                     .limit(50)
                     .onSnapshot(snapshot => {
                         snapshot.docChanges().forEach(change => {
@@ -408,8 +412,8 @@
                                         <p class="text-[#DCDDDE] leading-relaxed">${data.text}</p>
                                     </div>
                                 `;
-                                messagesDiv.insertBefore(div, messagesDiv.firstChild);
-                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                                messagesDiv.appendChild(div); // Добавляем сообщение в конец
+                                chatContainer.scrollTop = chatContainer.scrollHeight; // Прокрутка вниз
                             }
                         });
                     }, error => {
