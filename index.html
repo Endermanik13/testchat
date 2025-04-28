@@ -1,36 +1,83 @@
 <!DOCTYPE html>
-<html lang="'avant'>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форум</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        #auth, #forum { margin-bottom: 20px; }
-        .message { border-bottom: 1px solid #ddd; padding: 10px; }
-        input, button { margin: 5px; padding: 8px; }
-        .error { color: red; }
-    </style>
+    <!-- Подключаем Tailwind CSS через CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK (Compatibility Mode) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        /* Анимация появления элементов */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Анимация для новых сообщений */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .new-message {
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        /* Стили для скроллбара */
+        #messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #messages::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 10px;
+        }
+
+        #messages::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 10px;
+        }
+
+        #messages::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+    </style>
 </head>
-<body>
-    <div id="auth">
-        <h2>Авторизация</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Пароль">
-        <button onclick="signUp()">Регистрация</button>
-        <button onclick="signIn()">Вход</button>
-        <button onclick="signOut()" id="signOutBtn" style="display: none;">Выход</button>
-        <p class="error" id="error"></p>
-    </div>
-    <div id="forum" style="display: none;">
-        <h2>Форум</h2>
-        <input type="text" id="message" placeholder="Ваше сообщение">
-        <button onclick="sendMessage()">Отправить</button>
-        <div id="messages"></div>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-2xl p-6">
+        <!-- Секция авторизации -->
+        <div id="auth" class="fade-in bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-center">Вход в форум</h2>
+            <div class="space-y-4">
+                <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="password" placeholder="Пароль" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="flex space-x-4">
+                    <button onclick="signUp()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded transition duration-300">Регистрация</button>
+                    <button onclick="signIn()" class="flex-1 bg-green-600 hover:bg-green-700 text-white p-3 rounded transition duration-300">Вход</button>
+                </div>
+                <button onclick="signInAnonymously()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded transition duration-300">Войти анонимно</button>
+                <button onclick="signOut()" id="signOutBtn" class="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded transition duration-300 hidden">Выход</button>
+                <p class="error text-red-500 text-center" id="error"></p>
+            </div>
+        </div>
+
+        <!-- Секция форума -->
+        <div id="forum" class="fade-in bg-gray-800 rounded-lg shadow-lg p-6 hidden">
+            <h2 class="text-2xl font-bold mb-4 text-center">Форум</h2>
+            <div class="flex space-x-4 mb-4">
+                <input type="text" id="message" placeholder="Ваше сообщение" class="flex-1 p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded transition duration-300">Отправить</button>
+            </div>
+            <div id="messages" class="max-h-96 overflow-y-auto p-4 bg-gray-900 rounded-lg"></div>
+        </div>
     </div>
 
     <script>
@@ -54,34 +101,67 @@
         const forumDiv = document.getElementById('forum');
         const errorP = document.getElementById('error');
         const signOutBtn = document.getElementById('signOutBtn');
+        let currentUserNickname = null;
 
         // Auth state listener
         auth.onAuthStateChanged(user => {
             if (user) {
-                authDiv.style.display = 'none';
-                forumDiv.style.display = 'block';
-                signOutBtn.style.display = 'inline';
+                authDiv.classList.add('hidden');
+                forumDiv.classList.remove('hidden');
+                signOutBtn.classList.remove('hidden');
+                if (user.isAnonymous) {
+                    currentUserNickname = 'Аноним';
+                } else {
+                    currentUserNickname = extractNicknameFromEmail(user.email);
+                }
                 loadMessages();
             } else {
-                authDiv.style.display = 'block';
-                forumDiv.style.display = 'none';
-                signOutBtn.style.display = 'none';
+                authDiv.classList.remove('hidden');
+                forumDiv.classList.add('hidden');
+                signOutBtn.classList.add('hidden');
+                currentUserNickname = null;
             }
         });
 
+        // Helper function to generate fake email from nickname
+        function generateFakeEmail(nickname) {
+            return `${nickname.toLowerCase().replace(/[^a-z0-9]/g, '')}@fake.com`;
+        }
+
+        // Helper function to extract nickname from fake email
+        function extractNicknameFromEmail(email) {
+            return email.split('@')[0];
+        }
+
         // Sign up
         function signUp() {
-            const email = document.getElementById('email').value;
+            const nickname = document.getElementById('nickname').value;
             const password = document.getElementById('password').value;
+            if (!nickname || !password) {
+                errorP.textContent = 'Введите никнейм и пароль';
+                return;
+            }
+            const email = generateFakeEmail(nickname);
             auth.createUserWithEmailAndPassword(email, password)
                 .catch(error => errorP.textContent = error.message);
         }
 
         // Sign in
         function signIn() {
-            const email = document.getElementById('email').value;
+            const nickname = document.getElementById('nickname').value;
             const password = document.getElementById('password').value;
+            if (!nickname || !password) {
+                errorP.textContent = 'Введите никнейм и пароль';
+                return;
+            }
+            const email = generateFakeEmail(nickname);
             auth.signInWithEmailAndPassword(email, password)
+                .catch(error => errorP.textContent = error.message);
+        }
+
+        // Sign in anonymously
+        function signInAnonymously() {
+            auth.signInAnonymously()
                 .catch(error => errorP.textContent = error.message);
         }
 
@@ -96,7 +176,7 @@
             if (message.trim()) {
                 db.collection('messages').add({
                     text: message,
-                    user: auth.currentUser.email,
+                    user: currentUserNickname || 'Аноним',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     document.getElementById('message').value = '';
@@ -110,13 +190,14 @@
                 .orderBy('timestamp', 'desc')
                 .onSnapshot(snapshot => {
                     const messagesDiv = document.getElementById('messages');
-                    messagesDiv.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const div = document.createElement('div');
-                        div.className = 'message';
-                        div.textContent = `${data.user}: ${data.text}`;
-                        messagesDiv.appendChild(div);
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') {
+                            const data = change.doc.data();
+                            const div = document.createElement('div');
+                            div.className = 'new-message p-3 bg-gray-700 rounded-lg mb-2';
+                            div.textContent = `${data.user}: ${data.text}`;
+                            messagesDiv.insertBefore(div, messagesDiv.firstChild);
+                        }
                     });
                 });
         }
