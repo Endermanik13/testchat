@@ -139,7 +139,7 @@
             <h1 class="text-white font-semibold">Общий чат</h1>
         </div>
         <div class="ml-auto">
-            <button onclick="toggleAuth()" id="authToggle" class="w-9 h-9 flex items-center justify-center bg-primary rounded-full cursor-pointer">
+            <button id="authToggle" class="w-9 h-9 flex items-center justify-center bg-primary rounded-full cursor-pointer">
                 <span id="authIcon" class="text-white font-medium text-sm"></span>
             </button>
         </div>
@@ -209,13 +209,21 @@
             const messagesDiv = document.getElementById('messages');
             const errorP = document.getElementById('error');
             const messageErrorP = document.getElementById('messageError');
-            const messageInput = document.getElementById('message');
+            const messageInput = document.querySelector('.message-input');
             const sendButton = document.getElementById('sendButton');
             const authToggle = document.getElementById('authToggle');
             const authIcon = document.getElementById('authIcon');
             const chatContainer = document.querySelector('.chat-container');
             let currentUserNickname = null;
             let isSending = false;
+
+            // Toggle auth section
+            function toggleAuth() {
+                authDiv.classList.toggle('hidden');
+            }
+
+            // Add event listener for auth toggle
+            authToggle.addEventListener('click', toggleAuth);
 
             // Array of colors for avatars
             const avatarColors = ['#5865F2', '#57F287', '#FEE75C', '#EB459E', '#ED4245'];
@@ -275,11 +283,6 @@
                     messagesDiv.innerHTML = '';
                 }
             });
-
-            // Toggle auth section
-            function toggleAuth() {
-                authDiv.classList.toggle('hidden');
-            }
 
             // Sign up
             function signUp() {
