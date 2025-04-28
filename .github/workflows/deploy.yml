@@ -1,0 +1,58 @@
+# Название воркфлоу
+name: Deploy to GitHub Pages
+
+# Триггеры для запуска воркфлоу
+on:
+  push:
+    branches:
+      - main # Запускается при пуше в ветку main
+  pull_request:
+    branches:
+      - main # Опционально: для проверки PR
+
+# Переменные окружения
+env:
+  NODE_VERSION: '20' # Версия Node.js для установки зависимостей (если нужно)
+
+# Задачи воркфлоу
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Используем последнюю версию Ubuntu
+    steps:
+      # Проверяем код из репозитория
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Устанавливаем Node.js (если используются зависимости или сборка)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Кэшируем зависимости (опционально, для ускорения)
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Копируем файлы в нужную директорию (если структура сложная)
+      - name: Prepare files
+        run: |
+          mkdir -p dist
+          cp index.html dist/
+          # Добавьте другие файлы, если нужно, например:
+          # cp -r assets/ dist/assets/
+
+      # Деплой на GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Токен GitHub для аутентификации
+          publish_dir: dist # Директория для публикации
+          publish_branch: gh-pages # Ветка для GitHub Pages
+          force_orphan: true # Удаляет историю ветки gh-pages для чистоты
+          keep_files: false # Не сохраняет старые файлы
+          commit_message: Deploy to GitHub Pages # Сообщение коммита
