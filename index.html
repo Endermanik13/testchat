@@ -3,53 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Форум</title>
+    <title>Чат-форум</title>
     <!-- Подключаем Tailwind CSS через CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <!-- Firebase SDK (Compatibility Mode) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <style>
-        /* Анимация появления элементов */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6F73D8',
+                        secondary: ''
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
+                    }
+                }
+            }
         }
-
+    </script>
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Remix Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1E1F22;
+            color: #DCDDDE;
+        }
+        .group {
+            position: relative;
+        }
+        .group::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2px;
+            height: 0;
+            background-color: #6F73D8;
+            transition: height 0.2s ease-in-out;
+            border-radius: 0 4px 4px 0;
+            opacity: 0;
+        }
+        .group:hover::before {
+            height: 100%;
+            opacity: 1;
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: #2B2D31;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #1E1F22;
+            border-radius: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #36393F;
+        }
+        .message-input:focus {
+            outline: none;
+        }
+        .message-input::-webkit-scrollbar {
+            width: 8px;
+        }
+        .message-input::-webkit-scrollbar-track {
+            background: #2B2D31;
+        }
+        .message-input::-webkit-scrollbar-thumb {
+            background: #1E1F22;
+            border-radius: 4px;
+        }
+        .message-input::-webkit-scrollbar-thumb:hover {
+            background: #36393F;
+        }
+        .message-input {
+            resize: none;
+        }
         /* Анимация для новых сообщений */
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
         .new-message {
             animation: slideIn 0.5s ease-in-out;
         }
-
-        /* Стили для скроллбара */
-        #messages::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #messages::-webkit-scrollbar-track {
-            background: #2f3136;
-            border-radius: 10px;
-        }
-
-        #messages::-webkit-scrollbar-thumb {
-            background: #202225;
-            border-radius: 10px;
-        }
-
-        #messages::-webkit-scrollbar-thumb:hover {
-            background: #40444b;
-        }
-
         /* Стиль для иконки ошибки */
         .error-icon {
             display: inline-flex;
@@ -65,59 +123,60 @@
         }
     </style>
 </head>
-<body class="bg-discord-bg text-gray-200 min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-4xl p-8">
-        <!-- Секция авторизации -->
-        <div id="auth" class="fade-in bg-discord-dark rounded-lg p-8 mb-6 border border-discord-border">
-            <h2 class="text-3xl font-semibold mb-6 text-center">Вход в форум</h2>
-            <div class="space-y-6">
-                <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-4 rounded-lg bg-discord-input text-gray-200 border border-discord-border focus:outline-none focus:border-discord-blue transition-all">
-                <input type="password" id="password" placeholder="Пароль" class="w-full p-4 rounded-lg bg-discord-input text-gray-200 border border-discord-border focus:outline-none focus:border-discord-blue transition-all">
-                <div class="flex space-x-4">
-                    <button onclick="signUp()" class="flex-1 bg-discord-blue hover:bg-discord-blue-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Регистрация</button>
-                    <button onclick="signIn()" class="flex-1 bg-discord-gray hover:bg-discord-gray-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Вход</button>
+<body class="h-screen flex flex-col overflow-hidden">
+    <!-- Верхняя панель -->
+    <header class="bg-[#2B2D31] h-14 flex items-center px-4 border-b border-[#1E1F22]">
+        <div class="flex items-center">
+            <div class="w-8 h-8 flex items-center justify-center text-white bg-primary rounded-full mr-2">
+                <i class="ri-chat-3-fill ri-lg"></i>
+            </div>
+            <h1 class="text-white font-semibold">Общий чат</h1>
+        </div>
+        <div class="ml-auto">
+            <button onclick="toggleAuth()" id="authToggle" class="w-9 h-9 flex items-center justify-center bg-primary rounded-full cursor-pointer">
+                <span id="authIcon" class="text-white font-medium text-sm"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Секция авторизации -->
+    <div id="auth" class="bg-[#313338] p-4 hidden">
+        <div class="max-w-5xl mx-auto space-y-4">
+            <div class="bg-[#2B2D31] rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 text-center">Вход в форум</h2>
+                <div class="space-y-4">
+                    <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-3 rounded bg-[#383A40] text-gray-200 border border-[#1E1F22] focus:outline-none focus:border-primary transition-all">
+                    <input type="password" id="password" placeholder="Пароль" class="w-full p-3 rounded bg-[#383A40] text-gray-200 border border-[#1E1F22] focus:outline-none focus:border-primary transition-all">
+                    <div class="flex space-x-4">
+                        <button onclick="signUp()" class="flex-1 bg-primary hover:bg-opacity-90 text-white p-3 rounded transition-all duration-300 font-medium">Регистрация</button>
+                        <button onclick="signIn()" class="flex-1 bg-[#4F545C] hover:bg-[#5D6269] text-white p-3 rounded transition-all duration-300 font-medium">Вход</button>
+                    </div>
+                    <button onclick="signInAnonymously()" class="w-full bg-[#4F545C] hover:bg-[#5D6269] text-white p-3 rounded transition-all duration-300 font-medium">Войти анонимно</button>
+                    <p class="error text-red-400 text-center flex items-center justify-center" id="error"></p>
                 </div>
-                <button onclick="signInAnonymously()" class="w-full bg-discord-gray hover:bg-discord-gray-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Войти анонимно</button>
-                <p class="error text-red-400 text-center flex items-center justify-center" id="error"></p>
             </div>
         </div>
+    </div>
 
-        <!-- Секция форума -->
-        <div id="forum" class="fade-in bg-discord-dark rounded-lg p-8 border border-discord-border hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-semibold">Форум</h2>
-                <button onclick="signOut()" class="bg-red-500 hover:bg-red-600 text-white p-2 px-4 rounded-lg transition-all duration-300 font-medium">Выход</button>
+    <!-- Основная область чата -->
+    <div class="chat-container flex-1 bg-[#313338] overflow-y-auto p-4">
+        <div class="max-w-5xl mx-auto space-y-6" id="messages"></div>
+    </div>
+
+    <!-- Панель ввода сообщения -->
+    <div class="bg-[#313338] p-4 border-t border-[#1E1F22]">
+        <div class="max-w-5xl mx-auto">
+            <div class="relative bg-[#383A40] rounded-lg">
+                <textarea class="message-input w-full bg-transparent text-white p-3 pr-12 min-h-[50px] max-h-[200px] rounded-lg border-none" placeholder="Написать сообщение..."></textarea>
+                <button id="sendButton" class="absolute right-3 bottom-3 w-8 h-8 flex items-center justify-center text-white bg-primary hover:bg-opacity-90 rounded-full !rounded-button whitespace-nowrap">
+                    <i class="ri-send-plane-fill"></i>
+                </button>
             </div>
-            <div class="flex space-x-4 mb-6">
-                <input type="text" id="message" placeholder="Ваше сообщение" class="flex-1 p-4 rounded-lg bg-discord-input text-gray-200 border border-discord-border focus:outline-none focus:border-discord-blue transition-all">
-                <button id="sendButton" onclick="sendMessage()" class="bg-discord-blue hover:bg-discord-blue-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Отправить</button>
-            </div>
-            <p class="error text-red-400 flex items-center justify-center mb-4 hidden" id="messageError"><span class="error-icon">!</span>Required</p>
-            <div id="messages" class="max-h-96 overflow-y-auto p-4 bg-discord-dark rounded-lg border border-discord-border"></div>
+            <p class="error text-red-400 flex items-center mt-2 hidden" id="messageError"><span class="error-icon">!</span>Required</p>
         </div>
     </div>
 
     <script>
-        // Tailwind custom colors (Discord style)
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'discord-bg': '#36393f',
-                        'discord-dark': '#2f3136',
-                        'discord-border': '#202225',
-                        'discord-input': '#40444b',
-                        'discord-blue': '#5865f2',
-                        'discord-blue-hover': '#4752c4',
-                        'discord-gray': '#4f545c',
-                        'discord-gray-hover': '#5d6269',
-                        'discord-text': '#b9bbbe',
-                        'discord-text-hover': '#dcddde'
-                    }
-                }
-            }
-        }
-
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCbZBxLEmzbbSw8qO9FuaWzfNfHPz5CHnA",
@@ -135,31 +194,30 @@
 
         // DOM elements
         const authDiv = document.getElementById('auth');
-        const forumDiv = document.getElementById('forum');
+        const messagesDiv = document.getElementById('messages');
         const errorP = document.getElementById('error');
         const messageErrorP = document.getElementById('messageError');
         const messageInput = document.getElementById('message');
         const sendButton = document.getElementById('sendButton');
+        const authToggle = document.getElementById('authToggle');
+        const authIcon = document.getElementById('authIcon');
+        const chatContainer = document.querySelector('.chat-container');
         let currentUserNickname = null;
-        let isSending = false; // Флаг для предотвращения повторной отправки
+        let isSending = false;
 
-        // Auth state listener
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                authDiv.classList.add('hidden');
-                forumDiv.classList.remove('hidden');
-                if (user.isAnonymous) {
-                    currentUserNickname = 'Аноним';
-                } else {
-                    currentUserNickname = extractNicknameFromEmail(user.email);
-                }
-                loadMessages();
-            } else {
-                authDiv.classList.remove('hidden');
-                forumDiv.classList.add('hidden');
-                currentUserNickname = null;
-            }
-        });
+        // Array of colors for avatars
+        const avatarColors = ['#5865F2', '#57F287', '#FEE75C', '#EB459E', '#ED4245'];
+
+        // Function to get a consistent color based on nickname
+        function getAvatarColor(nickname) {
+            const hash = Array.from(nickname).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            return avatarColors[hash % avatarColors.length];
+        }
+
+        // Function to get the first letter of the nickname
+        function getFirstLetter(nickname) {
+            return nickname ? nickname.charAt(0).toUpperCase() : 'А';
+        }
 
         // Helper function to generate fake email from nickname
         function generateFakeEmail(nickname) {
@@ -175,9 +233,38 @@
         function formatTimestamp(timestamp) {
             if (!timestamp) return 'Только что';
             const date = timestamp.toDate();
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
             const hours = date.getHours().toString().padStart(2, '0');
             const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
+            return `${day}.${month}.${year} ${hours}:${minutes}`;
+        }
+
+        // Auth state listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                authDiv.classList.add('hidden');
+                if (user.isAnonymous) {
+                    currentUserNickname = 'Аноним';
+                } else {
+                    currentUserNickname = extractNicknameFromEmail(user.email);
+                }
+                authIcon.textContent = getFirstLetter(currentUserNickname);
+                authToggle.style.backgroundColor = getAvatarColor(currentUserNickname);
+                loadMessages();
+            } else {
+                authDiv.classList.remove('hidden');
+                currentUserNickname = null;
+                authIcon.textContent = 'В';
+                authToggle.style.backgroundColor = '#6F73D8';
+                messagesDiv.innerHTML = '';
+            }
+        });
+
+        // Toggle auth section
+        function toggleAuth() {
+            authDiv.classList.toggle('hidden');
         }
 
         // Sign up
@@ -219,11 +306,11 @@
 
         // Send message
         function sendMessage() {
-            if (isSending) return; // Предотвращаем повторную отправку
+            if (isSending) return;
             isSending = true;
-            sendButton.disabled = true; // Отключаем кнопку на время отправки
-            const message = messageInput.value;
-            if (!message.trim()) {
+            sendButton.disabled = true;
+            const message = messageInput.value.trim();
+            if (!message) {
                 messageErrorP.classList.remove('hidden');
                 isSending = false;
                 sendButton.disabled = false;
@@ -236,6 +323,8 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 messageInput.value = '';
+                messageInput.style.height = 'auto';
+                chatContainer.scrollTop = chatContainer.scrollHeight;
                 isSending = false;
                 sendButton.disabled = false;
             }).catch(error => {
@@ -246,37 +335,56 @@
         }
 
         // Handle Enter key press
-        messageInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Предотвращаем повторное срабатывание
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
+            }
+        });
+
+        // Send message on button click
+        sendButton.addEventListener('click', sendMessage);
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if (this.scrollHeight > 200) {
+                this.style.overflowY = 'auto';
+            } else {
+                this.style.overflowY = 'hidden';
             }
         });
 
         // Load messages
         function loadMessages() {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = ''; // Очищаем сообщения перед загрузкой
+            messagesDiv.innerHTML = '';
             db.collection('messages')
                 .orderBy('timestamp', 'desc')
-                .limit(50) // Ограничиваем количество сообщений для производительности
+                .limit(50)
                 .onSnapshot(snapshot => {
                     snapshot.docChanges().forEach(change => {
                         if (change.type === 'added') {
                             const data = change.doc.data();
                             const div = document.createElement('div');
-                            div.className = 'new-message flex items-start space-x-4 p-3 hover:bg-discord-gray rounded-lg mb-2';
+                            div.className = 'new-message group flex hover:bg-[#2E3035] p-3 rounded-lg transition-all duration-200 ease-in-out';
+                            const avatarColor = getAvatarColor(data.user);
+                            const firstLetter = getFirstLetter(data.user);
+                            const textColor = avatarColor === '#FEE75C' ? '#313338' : '#FFFFFF';
                             div.innerHTML = `
-                                <img src="https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png" alt="Avatar" class="w-10 h-10 rounded-full">
-                                <div class="flex-1">
-                                    <div class="flex items-baseline space-x-2">
-                                        <span class="font-semibold text-discord-text hover:text-discord-text-hover">${data.user}</span>
-                                        <span class="text-xs text-gray-500">${formatTimestamp(data.timestamp)}</span>
+                                <div class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-[${textColor}] font-semibold shadow-lg" style="background-color: ${avatarColor}">
+                                    ${firstLetter}
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <span class="font-semibold text-[15px] text-primary hover:underline cursor-pointer">${data.user}</span>
+                                        <span class="ml-2 text-xs text-gray-400 opacity-80">${formatTimestamp(data.timestamp)}</span>
                                     </div>
-                                    <p class="text-gray-300">${data.text}</p>
+                                    <p class="text-[#DCDDDE] leading-relaxed">${data.text}</p>
                                 </div>
                             `;
                             messagesDiv.insertBefore(div, messagesDiv.firstChild);
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
                         }
                     });
                 }, error => {
