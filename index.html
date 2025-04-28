@@ -37,17 +37,17 @@
         }
 
         #messages::-webkit-scrollbar-track {
-            background: #1f2937;
+            background: #2f3136;
             border-radius: 10px;
         }
 
         #messages::-webkit-scrollbar-thumb {
-            background: #4b5563;
+            background: #202225;
             border-radius: 10px;
         }
 
         #messages::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
+            background: #40444b;
         }
 
         /* Стиль для иконки ошибки */
@@ -65,39 +65,59 @@
         }
     </style>
 </head>
-<body class="bg-gray-800 text-gray-100 min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-3xl p-8">
+<body class="bg-discord-bg text-gray-200 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-4xl p-8">
         <!-- Секция авторизации -->
-        <div id="auth" class="fade-in bg-gray-900 rounded-xl shadow-md p-8 mb-6 border border-gray-700">
+        <div id="auth" class="fade-in bg-discord-dark rounded-lg p-8 mb-6 border border-discord-border">
             <h2 class="text-3xl font-semibold mb-6 text-center">Вход в форум</h2>
             <div class="space-y-6">
-                <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-4 rounded-lg bg-gray-800 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 transition-all">
-                <input type="password" id="password" placeholder="Пароль" class="w-full p-4 rounded-lg bg-gray-800 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 transition-all">
+                <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-4 rounded-lg bg-discord-input text-gray-200 border border-discord-border focus:outline-none focus:border-discord-blue transition-all">
+                <input type="password" id="password" placeholder="Пароль" class="w-full p-4 rounded-lg bg-discord-input text-gray-200 border border-discord-border focus:outline-none focus:border-discord-blue transition-all">
                 <div class="flex space-x-4">
-                    <button onclick="signUp()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-all duration-300 font-medium">Регистрация</button>
-                    <button onclick="signIn()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white p-4 rounded-lg transition-all duration-300 font-medium">Вход</button>
+                    <button onclick="signUp()" class="flex-1 bg-discord-blue hover:bg-discord-blue-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Регистрация</button>
+                    <button onclick="signIn()" class="flex-1 bg-discord-gray hover:bg-discord-gray-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Вход</button>
                 </div>
-                <button onclick="signInAnonymously()" class="w-full bg-gray-600 hover:bg-gray-500 text-white p-4 rounded-lg transition-all duration-300 font-medium">Войти анонимно</button>
+                <button onclick="signInAnonymously()" class="w-full bg-discord-gray hover:bg-discord-gray-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Войти анонимно</button>
                 <p class="error text-red-400 text-center flex items-center justify-center" id="error"></p>
             </div>
         </div>
 
         <!-- Секция форума -->
-        <div id="forum" class="fade-in bg-gray-900 rounded-xl shadow-md p-8 border border-gray-700 hidden">
+        <div id="forum" class="fade-in bg-discord-dark rounded-lg p-8 border border-discord-border hidden">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-semibold">Форум</h2>
                 <button onclick="signOut()" class="bg-red-500 hover:bg-red-600 text-white p-2 px-4 rounded-lg transition-all duration-300 font-medium">Выход</button>
             </div>
             <div class="flex space-x-4 mb-6">
-                <input type="text" id="message" placeholder="Ваше сообщение" class="flex-1 p-4 rounded-lg bg-gray-800 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 transition-all" onkeypress="if(event.key === 'Enter') sendMessage()">
-                <button onclick="sendMessage()" class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-all duration-300 font-medium">Отправить</button>
+                <input type="text" id="message" placeholder="Ваше сообщение" class="flex-1 p-4 rounded-lg bg-discord-input text-gray-200 border border-discord-border focus:outline-none focus:border-discord-blue transition-all">
+                <button id="sendButton" onclick="sendMessage()" class="bg-discord-blue hover:bg-discord-blue-hover text-white p-4 rounded-lg transition-all duration-300 font-medium">Отправить</button>
             </div>
             <p class="error text-red-400 flex items-center justify-center mb-4 hidden" id="messageError"><span class="error-icon">!</span>Required</p>
-            <div id="messages" class="max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg border border-gray-700"></div>
+            <div id="messages" class="max-h-96 overflow-y-auto p-4 bg-discord-dark rounded-lg border border-discord-border"></div>
         </div>
     </div>
 
     <script>
+        // Tailwind custom colors (Discord style)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'discord-bg': '#36393f',
+                        'discord-dark': '#2f3136',
+                        'discord-border': '#202225',
+                        'discord-input': '#40444b',
+                        'discord-blue': '#5865f2',
+                        'discord-blue-hover': '#4752c4',
+                        'discord-gray': '#4f545c',
+                        'discord-gray-hover': '#5d6269',
+                        'discord-text': '#b9bbbe',
+                        'discord-text-hover': '#dcddde'
+                    }
+                }
+            }
+        }
+
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCbZBxLEmzbbSw8qO9FuaWzfNfHPz5CHnA",
@@ -118,7 +138,10 @@
         const forumDiv = document.getElementById('forum');
         const errorP = document.getElementById('error');
         const messageErrorP = document.getElementById('messageError');
+        const messageInput = document.getElementById('message');
+        const sendButton = document.getElementById('sendButton');
         let currentUserNickname = null;
+        let isSending = false; // Флаг для предотвращения повторной отправки
 
         // Auth state listener
         auth.onAuthStateChanged(user => {
@@ -146,6 +169,15 @@
         // Helper function to extract nickname from fake email
         function extractNicknameFromEmail(email) {
             return email.split('@')[0];
+        }
+
+        // Helper function to format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Только что';
+            const date = timestamp.toDate();
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
         }
 
         // Sign up
@@ -187,9 +219,14 @@
 
         // Send message
         function sendMessage() {
-            const message = document.getElementById('message').value;
+            if (isSending) return; // Предотвращаем повторную отправку
+            isSending = true;
+            sendButton.disabled = true; // Отключаем кнопку на время отправки
+            const message = messageInput.value;
             if (!message.trim()) {
                 messageErrorP.classList.remove('hidden');
+                isSending = false;
+                sendButton.disabled = false;
                 return;
             }
             messageErrorP.classList.add('hidden');
@@ -198,25 +235,52 @@
                 user: currentUserNickname || 'Аноним',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                document.getElementById('message').value = '';
-            }).catch(error => errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`);
+                messageInput.value = '';
+                isSending = false;
+                sendButton.disabled = false;
+            }).catch(error => {
+                errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`;
+                isSending = false;
+                sendButton.disabled = false;
+            });
         }
+
+        // Handle Enter key press
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Предотвращаем повторное срабатывание
+                sendMessage();
+            }
+        });
 
         // Load messages
         function loadMessages() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = ''; // Очищаем сообщения перед загрузкой
             db.collection('messages')
                 .orderBy('timestamp', 'desc')
+                .limit(50) // Ограничиваем количество сообщений для производительности
                 .onSnapshot(snapshot => {
-                    const messagesDiv = document.getElementById('messages');
                     snapshot.docChanges().forEach(change => {
                         if (change.type === 'added') {
                             const data = change.doc.data();
                             const div = document.createElement('div');
-                            div.className = 'new-message p-3 bg-gray-700 rounded-lg mb-2 border border-gray-600';
-                            div.textContent = `${data.user}: ${data.text}`;
+                            div.className = 'new-message flex items-start space-x-4 p-3 hover:bg-discord-gray rounded-lg mb-2';
+                            div.innerHTML = `
+                                <img src="https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png" alt="Avatar" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <div class="flex items-baseline space-x-2">
+                                        <span class="font-semibold text-discord-text hover:text-discord-text-hover">${data.user}</span>
+                                        <span class="text-xs text-gray-500">${formatTimestamp(data.timestamp)}</span>
+                                    </div>
+                                    <p class="text-gray-300">${data.text}</p>
+                                </div>
+                            `;
                             messagesDiv.insertBefore(div, messagesDiv.firstChild);
                         }
                     });
+                }, error => {
+                    errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`;
                 });
         }
     </script>
