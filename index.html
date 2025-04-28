@@ -33,50 +33,67 @@
 
         /* Стили для скроллбара */
         #messages::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         #messages::-webkit-scrollbar-track {
-            background: #2d3748;
+            background: #1f2937;
             border-radius: 10px;
         }
 
         #messages::-webkit-scrollbar-thumb {
-            background: #4a5568;
+            background: #4b5563;
             border-radius: 10px;
         }
 
         #messages::-webkit-scrollbar-thumb:hover {
-            background: #718096;
+            background: #6b7280;
+        }
+
+        /* Стиль для иконки ошибки */
+        .error-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-2xl p-6">
+<body class="bg-gray-800 text-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-3xl p-8">
         <!-- Секция авторизации -->
-        <div id="auth" class="fade-in bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-            <h2 class="text-2xl font-bold mb-4 text-center">Вход в форум</h2>
-            <div class="space-y-4">
-                <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="password" placeholder="Пароль" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div id="auth" class="fade-in bg-gray-900 rounded-xl shadow-md p-8 mb-6 border border-gray-700">
+            <h2 class="text-3xl font-semibold mb-6 text-center">Вход в форум</h2>
+            <div class="space-y-6">
+                <input type="text" id="nickname" placeholder="Никнейм" class="w-full p-4 rounded-lg bg-gray-800 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 transition-all">
+                <input type="password" id="password" placeholder="Пароль" class="w-full p-4 rounded-lg bg-gray-800 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 transition-all">
                 <div class="flex space-x-4">
-                    <button onclick="signUp()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded transition duration-300">Регистрация</button>
-                    <button onclick="signIn()" class="flex-1 bg-green-600 hover:bg-green-700 text-white p-3 rounded transition duration-300">Вход</button>
+                    <button onclick="signUp()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-all duration-300 font-medium">Регистрация</button>
+                    <button onclick="signIn()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white p-4 rounded-lg transition-all duration-300 font-medium">Вход</button>
                 </div>
-                <button onclick="signInAnonymously()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded transition duration-300">Войти анонимно</button>
-                <button onclick="signOut()" id="signOutBtn" class="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded transition duration-300 hidden">Выход</button>
-                <p class="error text-red-500 text-center" id="error"></p>
+                <button onclick="signInAnonymously()" class="w-full bg-gray-600 hover:bg-gray-500 text-white p-4 rounded-lg transition-all duration-300 font-medium">Войти анонимно</button>
+                <p class="error text-red-400 text-center flex items-center justify-center" id="error"></p>
             </div>
         </div>
 
         <!-- Секция форума -->
-        <div id="forum" class="fade-in bg-gray-800 rounded-lg shadow-lg p-6 hidden">
-            <h2 class="text-2xl font-bold mb-4 text-center">Форум</h2>
-            <div class="flex space-x-4 mb-4">
-                <input type="text" id="message" placeholder="Ваше сообщение" class="flex-1 p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded transition duration-300">Отправить</button>
+        <div id="forum" class="fade-in bg-gray-900 rounded-xl shadow-md p-8 border border-gray-700 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-semibold">Форум</h2>
+                <button onclick="signOut()" class="bg-red-500 hover:bg-red-600 text-white p-2 px-4 rounded-lg transition-all duration-300 font-medium">Выход</button>
             </div>
-            <div id="messages" class="max-h-96 overflow-y-auto p-4 bg-gray-900 rounded-lg"></div>
+            <div class="flex space-x-4 mb-6">
+                <input type="text" id="message" placeholder="Ваше сообщение" class="flex-1 p-4 rounded-lg bg-gray-800 text-gray-100 border border-gray-600 focus:outline-none focus:border-blue-500 transition-all" onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-all duration-300 font-medium">Отправить</button>
+            </div>
+            <p class="error text-red-400 flex items-center justify-center mb-4 hidden" id="messageError"><span class="error-icon">!</span>Required</p>
+            <div id="messages" class="max-h-96 overflow-y-auto p-4 bg-gray-800 rounded-lg border border-gray-700"></div>
         </div>
     </div>
 
@@ -100,7 +117,7 @@
         const authDiv = document.getElementById('auth');
         const forumDiv = document.getElementById('forum');
         const errorP = document.getElementById('error');
-        const signOutBtn = document.getElementById('signOutBtn');
+        const messageErrorP = document.getElementById('messageError');
         let currentUserNickname = null;
 
         // Auth state listener
@@ -108,7 +125,6 @@
             if (user) {
                 authDiv.classList.add('hidden');
                 forumDiv.classList.remove('hidden');
-                signOutBtn.classList.remove('hidden');
                 if (user.isAnonymous) {
                     currentUserNickname = 'Аноним';
                 } else {
@@ -118,7 +134,6 @@
             } else {
                 authDiv.classList.remove('hidden');
                 forumDiv.classList.add('hidden');
-                signOutBtn.classList.add('hidden');
                 currentUserNickname = null;
             }
         });
@@ -138,12 +153,12 @@
             const nickname = document.getElementById('nickname').value;
             const password = document.getElementById('password').value;
             if (!nickname || !password) {
-                errorP.textContent = 'Введите никнейм и пароль';
+                errorP.innerHTML = '<span class="error-icon">!</span>Required';
                 return;
             }
             const email = generateFakeEmail(nickname);
             auth.createUserWithEmailAndPassword(email, password)
-                .catch(error => errorP.textContent = error.message);
+                .catch(error => errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`);
         }
 
         // Sign in
@@ -151,18 +166,18 @@
             const nickname = document.getElementById('nickname').value;
             const password = document.getElementById('password').value;
             if (!nickname || !password) {
-                errorP.textContent = 'Введите никнейм и пароль';
+                errorP.innerHTML = '<span class="error-icon">!</span>Required';
                 return;
             }
             const email = generateFakeEmail(nickname);
             auth.signInWithEmailAndPassword(email, password)
-                .catch(error => errorP.textContent = error.message);
+                .catch(error => errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`);
         }
 
         // Sign in anonymously
         function signInAnonymously() {
             auth.signInAnonymously()
-                .catch(error => errorP.textContent = error.message);
+                .catch(error => errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`);
         }
 
         // Sign out
@@ -173,15 +188,18 @@
         // Send message
         function sendMessage() {
             const message = document.getElementById('message').value;
-            if (message.trim()) {
-                db.collection('messages').add({
-                    text: message,
-                    user: currentUserNickname || 'Аноним',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    document.getElementById('message').value = '';
-                }).catch(error => errorP.textContent = error.message);
+            if (!message.trim()) {
+                messageErrorP.classList.remove('hidden');
+                return;
             }
+            messageErrorP.classList.add('hidden');
+            db.collection('messages').add({
+                text: message,
+                user: currentUserNickname || 'Аноним',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                document.getElementById('message').value = '';
+            }).catch(error => errorP.innerHTML = `<span class="error-icon">!</span>${error.message}`);
         }
 
         // Load messages
@@ -194,7 +212,7 @@
                         if (change.type === 'added') {
                             const data = change.doc.data();
                             const div = document.createElement('div');
-                            div.className = 'new-message p-3 bg-gray-700 rounded-lg mb-2';
+                            div.className = 'new-message p-3 bg-gray-700 rounded-lg mb-2 border border-gray-600';
                             div.textContent = `${data.user}: ${data.text}`;
                             messagesDiv.insertBefore(div, messagesDiv.firstChild);
                         }
